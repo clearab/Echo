@@ -7,6 +7,7 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Teams;
 using Microsoft.Bot.Connector.Teams;
 using Microsoft.Bot.Schema;
+using Microsoft.Bot.Schema.Teams;
 using Microsoft.Extensions.Logging;
 
 namespace Echo
@@ -70,20 +71,20 @@ namespace Echo
                 ITeamsContext teamsContext = turnContext.TurnState.Get<ITeamsContext>();
 
                 // Now fetch the Team ID, Channel ID, and Tenant ID off of the incoming activity
-                var incomingTeamId = teamsContext.Team.Id;
-                var incomingChannelid = teamsContext.Channel.Id;
-                var incomingTenantId = teamsContext.Tenant.Id;
+                string incomingTeamId = teamsContext.Team.Id;
+                string incomingChannelid = teamsContext.Channel.Id;
+                string incomingTenantId = teamsContext.Tenant.Id;
 
                 // Make an operation call to fetch the list of channels in the team, and print count of channels.
-                var channels = await teamsContext.Operations.FetchChannelListAsync(incomingTeamId);
+                ConversationList channels = await teamsContext.Operations.FetchChannelListAsync(incomingTeamId);
                 await turnContext.SendActivityAsync($"You have {channels.Conversations.Count} channels in this team");
 
                 // Make an operation call to fetch details of the team where the activity was posted, and print it.
-                var teamInfo = await teamsContext.Operations.FetchTeamDetailsAsync(incomingTeamId);
+                TeamDetails teamInfo = await teamsContext.Operations.FetchTeamDetailsAsync(incomingTeamId);
                 await turnContext.SendActivityAsync($"Name of this team is {teamInfo.Name} and group-id is {teamInfo.AadGroupId}");
                 
                 // Get the conversation state from the turn context.
-                var state = await _accessors.CounterState.GetAsync(turnContext, () => new CounterState());
+                CounterState state = await _accessors.CounterState.GetAsync(turnContext, () => new CounterState());
 
                 // Bump the turn count for this conversation.
                 state.TurnCount++;
@@ -95,7 +96,7 @@ namespace Echo
                 await _accessors.ConversationState.SaveChangesAsync(turnContext);
 
                 // Echo back to the user whatever they typed.
-                var responseMessage = $"Turn {state.TurnCount}: You sent '{turnContext.Activity.Text}' from channel ID {teamsContext.Channel.Id}\n";
+                string responseMessage = $"Turn {state.TurnCount}: You sent '{turnContext.Activity.Text}'. Toodles!\n";
                 await turnContext.SendActivityAsync(responseMessage);
             }
             else
