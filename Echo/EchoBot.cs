@@ -4,6 +4,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Teams;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
 
@@ -63,6 +64,8 @@ namespace Echo
             // see https://aka.ms/about-bot-activity-message to learn more about the message and other activity types
             if (turnContext.Activity.Type == ActivityTypes.Message)
             {
+                ITeamsContext teamsContext = turnContext.TurnState.Get<ITeamsContext>();
+                
                 // Get the conversation state from the turn context.
                 var state = await _accessors.CounterState.GetAsync(turnContext, () => new CounterState());
 
@@ -76,7 +79,7 @@ namespace Echo
                 await _accessors.ConversationState.SaveChangesAsync(turnContext);
 
                 // Echo back to the user whatever they typed.
-                var responseMessage = $"Turn {state.TurnCount}: You sent '{turnContext.Activity.Text}'\n";
+                var responseMessage = $"Turn {state.TurnCount}: You sent '{turnContext.Activity.Text}' from channel ID {teamsContext.Channel.Id}\n";
                 await turnContext.SendActivityAsync(responseMessage);
             }
             else
