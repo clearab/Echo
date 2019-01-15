@@ -6,7 +6,7 @@
       "name": "development",
       "endpoint": "http://localhost:3978/api/messages",
       "appId": "b4bbd95e-957b-4813-b47f-7e59dbd31f8b",
-      "appPassword": "!aB*91BfRW(mQ9:dc*Br*O_}p%gM5U83aA/r]jZt",
+      "appPassword": "imapasswordofawesomeness",
       "id": "http://localhost:3978/api/messages"
     }
   ],
