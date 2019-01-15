@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Teams;
+using Microsoft.Bot.Connector.Teams;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
 
@@ -64,7 +65,22 @@ namespace Echo
             // see https://aka.ms/about-bot-activity-message to learn more about the message and other activity types
             if (turnContext.Activity.Type == ActivityTypes.Message)
             {
+
+                // Before doing Teams specific stuff, get hold of the TeamsContext
                 ITeamsContext teamsContext = turnContext.TurnState.Get<ITeamsContext>();
+
+                // Now fetch the Team ID, Channel ID, and Tenant ID off of the incoming activity
+                var incomingTeamId = teamsContext.Team.Id;
+                var incomingChannelid = teamsContext.Channel.Id;
+                var incomingTenantId = teamsContext.Tenant.Id;
+
+                // Make an operation call to fetch the list of channels in the team, and print count of channels.
+                var channels = await teamsContext.Operations.FetchChannelListAsync(incomingTeamId);
+                await turnContext.SendActivityAsync($"You have {channels.Conversations.Count} channels in this team");
+
+                // Make an operation call to fetch details of the team where the activity was posted, and print it.
+                var teamInfo = await teamsContext.Operations.FetchTeamDetailsAsync(incomingTeamId);
+                await turnContext.SendActivityAsync($"Name of this team is {teamInfo.Name} and group-id is {teamInfo.AadGroupId}");
                 
                 // Get the conversation state from the turn context.
                 var state = await _accessors.CounterState.GetAsync(turnContext, () => new CounterState());
