@@ -7,10 +7,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Teams;
-using Microsoft.Bot.Connector.Teams;
 using Microsoft.Bot.Schema;
 using Microsoft.Bot.Schema.Teams;
 using Microsoft.Extensions.Logging;
+using Microsoft.Bot.Connector.Teams;
+using Microsoft.Bot.Connector.Authentication;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Bot.Connector;
+using System.Linq;
 
 namespace Echo
 {
@@ -79,6 +83,21 @@ namespace Echo
                 // Make an operation call to fetch details of the team where the activity was posted, and print it.
                 TeamDetails teamInfo = await teamsContext.Operations.FetchTeamDetailsAsync(incomingTeamId);
                 await turnContext.SendActivityAsync($"Name of this team is {teamInfo.Name} and group-id is {teamInfo.AadGroupId}");
+                var conversationId = turnContext.Activity.Conversation.Id;
+
+
+                TeamsChannelAccount sender = teamsContext.AsTeamsChannelAccount(turnContext.Activity.From);
+                var channelAccounts = teamsContext.GetConversationParametersForCreateOrGetDirectConversation(sender).Members;
+
+                ConnectorClient client = new ConnectorClient(new Uri(turnContext.Activity.ServiceUrl));
+                List<TeamsChannelAccount> roster = (await client.Conversations
+                    .GetConversationMembersAsync(teamsContext.Team.Id)
+                    .ConfigureAwait(false))
+                    .ToList()
+                        .ConvertAll(member =>
+                        {
+                            return teamsContext.AsTeamsChannelAccount(member);
+                        });
                 
                 // Get the conversation state from the turn context.
                 CounterState state = await _accessors.CounterState.GetAsync(turnContext, () => new CounterState());
